@@ -1,0 +1,1 @@
+git clone git@github.com:SoEasy2/workflow-frontend.git -b master

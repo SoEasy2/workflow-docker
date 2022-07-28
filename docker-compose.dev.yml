@@ -13,6 +13,13 @@ services:
     volumes:
       - "./workflow-frontend:/src"
       - "/src/node_modules"
+
+  #      For backend:
+  #      - AWS_ACCESS_KEY_ID=minio
+  #      - AWS_SECRET_ACCESS_KEY=minio123
+  #      - AWS_BUCKET=bucket
+  #      - AWS_ENDPOINT=http://minio:9000
+
   db:
     container_name: postgres_container
     image: postgres

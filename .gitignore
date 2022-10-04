@@ -3,3 +3,11 @@
 /redis-data
 /workflow-frontend
 /.idea
+/kafka
+/kafka-data
+/kafka1
+/zoo1
+/zookeeper
+/zookeeper-datalog
+/zookeeper-data
+/workflow-api-gateway

@@ -1,42 +1,42 @@
 version: '3.3'
 services:
-#  workflow-frontend:
-#    image: node:16
-#    ports:
-#      - "3000:3000"
-#    working_dir: /src
-#    networks:
-#      - workflow-network
-#    environment:
-#      HOST: 0.0.0.0
-#    command: bash -c "npm install -f && npm start"
-#    volumes:
-#      - "./workflow-frontend:/src"
-#      - "/src/node_modules"
+  workflow-frontend:
+    image: node:16
+    ports:
+      - "3000:3000"
+    working_dir: /src
+    networks:
+      - app-network
+    environment:
+      HOST: 0.0.0.0
+    command: bash -c "npm install -f && npm start"
+    volumes:
+      - "./workflow-frontend:/src"
+      - "/src/node_modules"
 
   workflow-api-gateway:
     image: node:16
     ports:
       - "4000:4000"
     working_dir: /src
-    restart:
-        always
     networks:
-      - workflow-network
+      - app-network
     command: bash -c "npm install -f && npm start"
+    depends_on:
+      - workflow-api-users
+      - workflow-api-auth
+      - kafka
     volumes:
       - "./workflow-api-gateway:/src"
-      - "/src/node_modules"
 
+  #////////////////////////////////////////////////////////////////////////////////////////
   workflow-api-users:
     image: node:16
     ports:
       - "4001:4001"
     working_dir: /src
-    restart:
-        always
     networks:
-      - workflow-network
+      - app-network
     environment:
       DATABASE_HOST: workflow-db-users
       DATABASE_PORT: 5432
@@ -45,29 +45,18 @@ services:
       DATABASE_NAME: users
     command: bash -c "npm install -f && npm start"
     depends_on:
-        - workflow-db-users
+      - workflow-db-users
+      - kafka
     volumes:
       - "./workflow-api-users:/src"
-      - "/src/node_modules"
 
-#  workflow-db-users:
-#    image: postgres:alpine
-#    restart: always
-#    environment:
-#      POSTGRES_USER: root
-#      POSTGRES_PASSWORD: root
-#      POSTGRES_DB: users
-#    ports:
-#      - "5432:5432"
-#    volumes:
-#      - ./workflow-api-users/_data/postgres:/var/lib/postgresql/data
   workflow-db-users:
     image: kartoza/postgis:14-3.1
     volumes:
       - ./workflow-db-users:/var/lib/postgresql
       - ./workflow-db-users_data:/var/lib/postgresql/data
     ports:
-      - 25432:5432
+      - "25432:5432"
     restart: on-failure
     environment:
       - POSTGRES_USER=admin
@@ -75,7 +64,7 @@ services:
       - POSTGRES_DB=users
       - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
     networks:
-      - workflow-network
+      - app-network
 
   workflow-pgadmin-users:
     image: dpage/pgadmin4
@@ -89,56 +78,45 @@ services:
     ports:
       - "5050:80"
     networks:
-      - workflow-network
+      - app-network
+  #////////////////////////////////////////////////////////////////////////////////////////
 
-#        For backend:
-#        - AWS_ACCESS_KEY_ID=minio
-#        - AWS_SECRET_ACCESS_KEY=minio123
-#        - AWS_BUCKET=bucket
-#        - AWS_ENDPOINT=http://minio:9000
-
-
-
-
-  minio:
-    image: docker.io/bitnami/minio:2022
+  #////////////////////////////////////////////////////////////////////////////////////////
+  workflow-api-auth:
+    image: node:16
     ports:
-      - '9001:9001'
-    restart:
-      on-failure
-    volumes:
-      - 'minio_data:/data'
-    environment:
-      - MINIO_ROOT_USER=minio
-      - MINIO_ROOT_PASSWORD=minio123
-      - MINIO_DEFAULT_BUCKETS=bucket:policy
+      - "4002:4002"
+    working_dir: /src
     networks:
-      - workflow-network
-
-  redis:
-    container_name: redis
-    hostname: redis
-    image: redis
-    volumes:
-      - ./redis-data:/data
-    networks:
-      - workflow-network
-
-  redis-commander:
-    container_name: redis-commander
-    hostname: redis-commander
-    image: rediscommander/redis-commander:latest
-    restart: always
-    environment:
-      - REDIS_HOSTS=local:redis:6379
-    ports:
-      - '8081:8081'
+      - app-network
+    command: bash -c "npm install -f && npm start"
     depends_on:
-      - redis
+      - kafka
+    volumes:
+      - "./workflow-api-auth:/src"
+  #////////////////////////////////////////////////////////////////////////////////////////
+
+  #////////////////////////////////////////////////////////////////////////////////////////
+  workflow-api-mailer:
+    image: node:16
+    ports:
+      - "4003:4003"
+    working_dir: /src
     networks:
-      - workflow-network
+      - app-network
+    command: bash -c "npm install -f && npm start"
+    depends_on:
+      - kafka
+    volumes:
+      - "./workflow-api-mailer:/src"
+  #////////////////////////////////////////////////////////////////////////////////////////
+  #        For backend:
+  #        - AWS_ACCESS_KEY_ID=minio
+  #        - AWS_SECRET_ACCESS_KEY=minio123
+  #        - AWS_BUCKET=bucket
+  #        - AWS_ENDPOINT=http://minio:9000
 
-
+  #////////////////////////////////////////////////////////////////////////////////////////
   zookeeper:
     image: confluentinc/cp-zookeeper:latest
     environment:
@@ -151,8 +129,7 @@ services:
       - zk-data:/var/lib/zookeeper/data
       - zk-log-data:/var/lib/zookeeper/log
     networks:
-      - workflow-network
-
+      - app-network
   kafka:
     image: confluentinc/cp-kafka:latest
     depends_on:
@@ -170,32 +147,24 @@ services:
     volumes:
       - kafka-data:/var/lib/kafka/data
     networks:
-      - workflow-network
-
-
-  control-center:
-    image: confluentinc/cp-enterprise-control-center:6.0.1
-    hostname: control-center
-    depends_on:
-      - kafka
-    ports:
-      - "9021:9021"
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:29092"
-      CONTROL_CENTER_REPLICATION_FACTOR: 1
-      PORT: 9021
-
+      - app-network
+  #////////////////////////////////////////////////////////////////////////////////////////
 
 networks:
-  workflow-network:
+  app-network:
+    driver: bridge
+  redis_network:
     driver: bridge
 
 volumes:
-  workflow-api-gateway:
+  workflow-frontend:
+
+  #backend
   workflow-api-users:
-  workflow-db-users:
-  workflow-pgadmin-users:
-  minio_data:
+  workflow-api-gateway:
+  workflow-api-auth:
+  workflow-api-mailer:
+
   kafka-data:
   zk-data:
   zk-log-data:

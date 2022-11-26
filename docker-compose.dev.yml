@@ -53,8 +53,8 @@ services:
   workflow-db-users:
     image: kartoza/postgis:14-3.1
     volumes:
-      - ./workflow-db-users:/var/lib/postgresql
-      - ./workflow-db-users_data:/var/lib/postgresql/data
+      - ./volumes/users/workflow-db-users:/var/lib/postgresql
+      - ./volumes/users/workflow-db-users_data:/var/lib/postgresql/data
     ports:
       - "25432:5432"
     restart: on-failure
@@ -74,7 +74,7 @@ services:
       PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
       PGADMIN_DEFAULT_PASSWORD: admin
     volumes:
-      - ./workflow-pgadmin-users:/var/lib/pgadmin
+      - ./volumes/users/workflow-pgadmin-users:/var/lib/pgadmin
     ports:
       - "5050:80"
     networks:
@@ -105,10 +105,71 @@ services:
     networks:
       - app-network
     command: bash -c "npm install -f && npm start"
+    environment:
+      - SMTP_HOST=smtp.google.com
+      - SMTP_PORT=465
+      - SMTP_SECURE=true
+      - SMTP_AUTH_USER=roman.stasenok76@gmail.com
+      - SMTP_AUTH_ACCESS_URL=https://oauth2.googleapis.com/token
+      - SMTP_AUTH_ACCESS_TOKEN=ya29.a0AeTM1ienOaVGM4j32w2KZYckiBAWj3Xy75inlj3LgEQW9uM7yNeGJBiILFCKjbT_RPVHIwlLbIiPuhxcRw3aKR2hNAzkFKGuJioOhEZUjmoqAd9rbgJnme2HZmWlQN3C_38TZtXF6vXIY1Jb1xU7M3VjeBdeaCgYKAT4SARISFQHWtWOmpghsqdfHCpHxab4XzjZl4w0163
+      - SMTP_AUTH_CLIENT_ID=955289855748-ftu17bhd5foo20jm9h5b2hgrq53ttmb7.apps.googleusercontent.com
+      - SMTP_AUTH_CLIENT_SECRET=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
+      - SMTP_AUTH_REFRESH_TOKEN=1//04eLSexnFh76OCgYIARAAGAQSNwF-L9Ir9gRyJMpkn7FUH2PDwUANLHTbCJJza-YEzV9ztiML1W5q5xTAA1B0azLKV3GKvbG1H-E
     depends_on:
       - kafka
     volumes:
       - "./workflow-api-mailer:/src"
+  #////////////////////////////////////////////////////////////////////////////////////////
+
+  #////////////////////////////////////////////////////////////////////////////////////////
+  workflow-api-company:
+    image: node:16
+    ports:
+      - "4004:4004"
+    working_dir: /src
+    networks:
+      - app-network
+    environment:
+      DATABASE_HOST: workflow-db-company
+      DATABASE_PORT: 5432
+      DATABASE_USERNAME: admin
+      DATABASE_PASSWORD: root
+      DATABASE_NAME: company
+    command: bash -c "npm install -f && npm start"
+    depends_on:
+      - kafka
+    volumes:
+      - "./workflow-api-company:/src"
+
+  workflow-db-company:
+    image: kartoza/postgis:14-3.1
+    volumes:
+      - ./volumes/company/workflow-db-company:/var/lib/postgresql
+      - ./volumes/company/workflow-db-company_data:/var/lib/postgresql/data
+    ports:
+      - "25432:5432"
+    restart: on-failure
+    environment:
+      - POSTGRES_USER=admin
+      - POSTGRES_PASS=root
+      - POSTGRES_DB=company
+      - POSTGRES_MULTIPLE_EXTENSIONS=postgis,hstore,postgis_topology,postgis_raster,pgrouting
+    networks:
+      - app-network
+
+  workflow-pgadmin-company:
+    image: dpage/pgadmin4
+    logging:
+      driver: none
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin4@pgadmin.org
+      PGADMIN_DEFAULT_PASSWORD: admin
+    volumes:
+      - ./volumes/company/workflow-pgadmin-company:/var/lib/pgadmin
+    ports:
+      - "5050:80"
+    networks:
+      - app-network
   #////////////////////////////////////////////////////////////////////////////////////////
   #        For backend:
   #        - AWS_ACCESS_KEY_ID=minio
@@ -164,6 +225,7 @@ volumes:
   workflow-api-gateway:
   workflow-api-auth:
   workflow-api-mailer:
+  workflow-api-company:
 
   kafka-data:
   zk-data:

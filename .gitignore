@@ -12,3 +12,7 @@
 /zookeeper-data
 /workflow-api-gateway
 /workflow-api-users
+/workflow-api-company
+/workflow-api-auth
+/workflow-api-mailer
+wor

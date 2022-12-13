@@ -9,7 +9,7 @@ services:
       - app-network
     environment:
       HOST: 0.0.0.0
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run dev"
     volumes:
       - "./workflow-frontend:/src"
       - "/src/node_modules"
@@ -21,7 +21,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - workflow-api-users
       - workflow-api-auth
@@ -43,7 +43,7 @@ services:
       DATABASE_USERNAME: admin
       DATABASE_PASSWORD: root
       DATABASE_NAME: users
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - workflow-db-users
       - kafka
@@ -89,7 +89,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - kafka
     volumes:
@@ -104,7 +104,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     environment:
       - SMTP_HOST=smtp.google.com
       - SMTP_PORT=465
@@ -135,7 +135,7 @@ services:
       DATABASE_USERNAME: admin
       DATABASE_PASSWORD: root
       DATABASE_NAME: company
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - kafka
     volumes:
@@ -147,7 +147,7 @@ services:
       - ./volumes/company/workflow-db-company:/var/lib/postgresql
       - ./volumes/company/workflow-db-company_data:/var/lib/postgresql/data
     ports:
-      - "25432:5432"
+      - "25433:5432"
     restart: on-failure
     environment:
       - POSTGRES_USER=admin
@@ -167,7 +167,7 @@ services:
     volumes:
       - ./volumes/company/workflow-pgadmin-company:/var/lib/pgadmin
     ports:
-      - "5050:80"
+      - "5051:80"
     networks:
       - app-network
   #////////////////////////////////////////////////////////////////////////////////////////

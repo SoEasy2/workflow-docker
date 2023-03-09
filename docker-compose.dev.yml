@@ -21,7 +21,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - workflow-api-users
       - workflow-api-auth
@@ -43,7 +43,7 @@ services:
       DATABASE_USERNAME: admin
       DATABASE_PASSWORD: root
       DATABASE_NAME: users
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - workflow-db-users
       - kafka
@@ -89,7 +89,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - kafka
     volumes:
@@ -104,7 +104,7 @@ services:
     working_dir: /src
     networks:
       - app-network
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     environment:
       - SMTP_HOST=smtp.google.com
       - SMTP_PORT=465
@@ -135,7 +135,7 @@ services:
       DATABASE_USERNAME: admin
       DATABASE_PASSWORD: root
       DATABASE_NAME: company
-    command: bash -c "npm install -f && npm start"
+    command: bash -c "npm install -f && npm run prepare && npm start"
     depends_on:
       - kafka
     volumes:

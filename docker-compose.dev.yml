@@ -9,7 +9,7 @@ services:
       - app-network
     environment:
       HOST: 0.0.0.0
-    command: bash -c "npm install -f && npm run dev"
+    command: bash -c "chmod 777 ./node_modules && npm install -f && npm run dev"
     volumes:
       - "./workflow-frontend:/src"
       - "/src/node_modules"
